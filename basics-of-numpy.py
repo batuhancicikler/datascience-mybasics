@@ -200,7 +200,7 @@ print(sol)
 print(sag, "\n")
 
 #%% UFuncs
-
+#numpy.<ufunc> lar. Yani numpy nin fonksiyonları.
 # her bir operatör, spesifik olarak numpy de hazırlanmış birer fonksiyonu çağırıyor,
 #  python build-in fonksiyonları C tabanlı olduğu için C gibi döngülerde ve işlemlerde bir yavaşlık var.
 #   Numpy nin build in fonksiyonları ise bu konu9da kendi fonksiyonlarını kullanıyor. Her bir operatör birer
@@ -269,6 +269,187 @@ print("log10(x): ", np.log10(x))
 x = [0, 0.001, 0.01, 0.1]
 print("\nx        :", x)
 print("log(1 + )  : ", np.log1p(x))
+
+# daha spesifik ve detaylı ufuncs için kullanabileceğim submodul scipy in special i scipy.special
+#  verilerimde bilinmeyen matematiksel fonksiyonları döndürmek istiyorsam bu submodul işime yarayabilir.
+
+#%%
+"""
+    GELİŞMİŞ UFUNC ÖZELLİKLERİ--->
+        özelleştirilmiş ufunc özelliklerine bakalım.
+            1. Specifying output (spesifik edilmiş çıktı):
+                "out" komutu; çıktının depolanacağı yeri belirleyen komut.
+                Komut, ufuncların parantezlerinin içine, yani fonksiyonların aldığı değerlere girilir
+"""
+
+x = np.arange(5)
+y = np.empty(5)
+np.multiply(x, 10, out=y)
+print("Specifying output\n", y)
+
+"""
+                output = [0. 10. 20. 30. 40.]
+                x'in tüm elemanlarını 10 ile çarpıp çıktıyı y üzerinden verdik ki y 5 elemandan
+                oluştuğu için ilk 5 sonucu aldık. Buna benzer bir şekilde çıktıyı geçici, görüntü bir
+                arrayda göstermek yerine sonucu direk direkt olarak hafızada istediğimiz yerde tutabiliriz.
+"""
+
+y = np.zeros(10)
+print("specifying output\n", np.power(2, x, out=y[::2]))
+
+"""
+                x elemanlarını 2 ** x olarak döndürecek yani 0. eleman 2^0
+                1. eleman 2^1 gibi.. ve bunu 10 tane 0 dan oluşan y arrayının 0,2,4,6,8. indexlerinde tutucak
+                output da 0,2,4,6 ve 8. indexler hariç 0, geri kalanlar ise 2 nin 0,1,2,3,4 üslerini göstericek
+                
+                
+                
+            2. Aggregates (Kümeleşmeler):
+                "reduce" komutu, arrayda tek bir eleman kalana kadar belirlenmiş işlemi yapar.
+                yapılmak istenen işlemden sonra fonksiyon yazılır ve parantezinin içine aldığı değer,
+                hangi arrayda işlemi yapacağıdır.
+"""
+ 
+x = np.arange(1, 6) # = [1,2,3,4,5]
+print("Aggregates(reduce)\n", np.add.reduce(x)) # x elemanlarını toplayarak azaltacak
+                 #output = 15 -> 1+2+3+4+5
+
+print("Aggregates(reduce)\n",np.multiply.reduce(x)) # x elemanlarını çarparak azaltacak
+                              #output = 120 -> 1*2*3*4*55
+                
+                
+"""
+                "accumulate" komutu, reduce gibi işlem yapar ancak işlemlerin her adımında
+                ortaya çıkan sonuçlarını depolar.
+                
+"""
+
+print("Aggregates(acumulate)\n",np.add.accumulate(x))  # [1,2,3,4,5]
+                              #output = [1, 3, 6, 10, 15] -> ilk eleman, top = ilk + ikinci eleman,
+                                                             #top = top + ücüncü eleman...
+                                                
+print("Aggregates(acumulate)\n",np.multiply.accumulate(x)) #[1,2,3,4,5]
+                                 #output = [1, 2, 6, 24, 120]
+                
+"""
+                gibi gibi özel durumlarda sonuçlar üzerinde
+                işlem yapmak için oluşturulmuş numpy fonksiyonları mevcut
+                (np.sum, np.prod, np.cumsum, np.cumprod)
+            
+            
+            3.Outer Products (sanırım Çarpım Matrisi):
+                    işlem fonksiyonundan sonra .outer(x, y) iki tane array değeri alır
+                    ve çaprım tablosu gibi bir tablo ortaya çıkartır.
+"""
+
+print("outer product\n",np.multiply.outer(x, x)) # 0 indexli satır ve sütun x'ten([1,2,3,4,5]) oluşur ve
+                                # tüm satır ve sütun elemanları birbiriyle çarpılarak kesiştiği
+                                # noktaya sonuç yazılır.
+
+#%%Aggregations: Min, Max, and Everything In Between
+
+"""
+    Summing the values in an array:
+        big_array = np.random.rand(1000000)
+        %timeit sum(big_array)
+        %timeit np.sum(big_array)
+            10 loops, best of 3: 104 ms per loop
+            1000 loops, best of 3: 442 µs per loop
+            
+        %timeit min(big_array)
+        %timeit np.min(big_array)
+            10 loops, best of 3: 82.3 ms per loop
+            1000 loops, best of 3: 497 µs per loop
+
+"""
+big = np.random.rand(1000000)
+print(np.sum(big))
+print(np.min(big), np.max(big))
+print("\n\n")
+
+# numpy ile bu min, max ve sum fonksiyonlarını kısaltabiliriz;
+
+print(big.min(), big.max(), big.sum())
+print("\n\n")
+
+"""
+    Multi dimensional aggregates;
+    default olarak tüm array içinde sum getiricek ama örneğin tek tek tüm sütunların en
+    küçük elemanlarını istiyorsak o zaman axis i 0 yapmalıyız.
+"""
+
+x = np.random.random((3, 5))
+print(x)
+print(x.sum())
+print(x.min(axis = 0)) # sütunların en küçük elemanları (5 sütun var)
+print(x.max(axis = 1)) # satırların en büyük elemanlar (3 satır var)
+
+"""
+    Numpy aggregates arasında NaN-safe fonksiyonlar da vardır. Bunların işlevi,
+    bulunmayan değerleri(missing values) görmezden gelmeleridir.
+    np.sum      -> np.nansum   (elemanların toplamı)
+    np.prod     -> np.nanprod  (elemanların çarpımı)
+    np.mean     -> np.nanmean  (elemanların ortalaması)
+    np.std      -> np.nanstd   (elemanların standart sapması)
+    np.var      -> np.nanvar   (elemanların varyansı)
+    .
+    ..
+    ...
+"""
+
+#%% BROADCASTING
+
+a = np.array([1,3,5])
+b = np.array([9,9,9])
+print(a + b,"\n")
+print(a + 3,"\n")
+print(b + 1,"\n")
+c = np.ones((3, 3))
+print(c,"\n")
+print(c + b,"\n")
+
+a = np.arange(3)[np.newaxis, :] #reshape((1,3))
+b = np.arange(3)[:, np.newaxis] #reshape((3,1))
+print(a,"\n")
+print(b,"\n")
+print(a + b,"\n") 
+
+"""
+    broadcasting kuralları:
+        1.) eğer 2 arrayın boyut sayısı farklı ise, daha az boyutu olan array, sola doğru doldurulur
+        2.) eğer 2 arrayın şekli herhangi bir boyutta örtüşmüyorsa, boyutu 1 e eşit olan array
+            diğerinin şekline uyacak şekilde gerdirilir.
+        3.) eğer boyutların büyüklüğü örtüşmez ve 1 e eşit olan bir boyut yoksa error çıkar
+"""
+#kurallar örneği; 2-boyutlu arrayı 1-boyutlu arraya ekleme
+
+m = np.ones((2, 3)) #shape = (2,3)
+x = np.arange(3) #shape = (3,)
+
+#kurala göre düşük olanı sola doldur yani x isimli arrayı
+# x.shape(3,) ---> x.shape(1,3) sola dolduruldu
+
+#kural 2 ye göre de arraylerin boyutları uyuşmuyor
+# bir tanesi 2,3 iken diğeri 1,3 o yüzden 1 olan gerdirilir ve 2,3 olur
+#  m.shape(2,3) --- x.shape(2,3)
+#   Şekiller örtüşür ve final shape 2,3 olur.
+
+print(m + x,"\n") #[[1 2 3],
+              #[1 2 3]]
+
+# bu örnekte broadcasting yapılan array x arrayıydı. Şimdi iki arrayında broadcasting yapıldığı
+#  bir kod yazalım
+              
+a = np.arange(3).reshape((3, 1)) #shape(3,1)
+b = np.arange(3)                #shape(3,)
+
+#kural 1 işlenir, b'nin yani boyutu az olanın soluna doldurulur -> b.shape(1,3)
+#kural 2 işlenir iki arrayda da 1 olduğu için 1 ler gerdirilir. a,b.shape(3,3)
+
+print(a+b,"\n")
+
+
+
 
 
 
