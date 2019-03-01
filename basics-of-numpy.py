@@ -448,8 +448,145 @@ b = np.arange(3)                #shape(3,)
 
 print(a+b,"\n")
 
+# şimdi de 2 arrayın boyutları, boyutlarının büyüklüğü, satır veya sütun sayısından birinin 1 olmadığı
+#  kural 3 e uygun bir örnek yapalım.
+
+a = np.ones((3, 2)) # [[0,0], [0,0], [0,0]]... shape(3,2)
+x = np.arange(3) #[0,1,2]... shape(3,) kural 1 işlenir.... shape(1,3)
+                    # ardından kural 2 işlenir 1 olan kısım a nın boyutuna kadar gerdilir... shape(3,3)
+                    # a.shape(3,2) iken x.shape(3,3) yani kural 3'e çarptık.. 
+                    #toplamayı deneyince error alıcaz.
+                    
+print(a+x, "\n")
+
+#%% Broadcasting in Practice
+import matplotlib.pyplot as plt
+#centering array
+
+x = np.random.random((10, 3))
+x_mean = x.mean(0) #sadece ilk boyutun ortalaması
+print(x, "\n") #mean ı bulabiliyoruz ama
+print(x_mean, "\n")#centering array dediğimiz olayı yapmak için broadcasting kullanmalıyız
+                            
+x_centered = x - x_mean #çıkartma işlemi ile x arrayını ortalayabiliriz
+print(x_centered.mean(0), "\n")
 
 
+#plottinng two-dimensional function
+"""
+    z = f(x, y) şeklinde bir fonksiyon tanımlamak istiyorsak broadcastingden faydalanabiliriz.
+    ardından matplotlib ile görselleştiririz.
+"""
+
+x = np.linspace(0, 5, 50) #0 dan 5 e 50 adımda
+y = np.linspace(0, 5, 50)[:, np.newaxis] #0 dan 5 e 50 adım ama her bir adım birer satır olurken,
+                                            # bütün array sadece tek bir sütundan oluşucak
+                                            
+z = np.sin(x) ** 10 + np.cos(10 + y * x) * np.cos(x)
+
+plt.imshow(z, origin="lower", extent=[0, 5, 0, 5], cmap="viridis")
+plt.colorbar() #iki boyutlu array görselleştirme
+
+#%% Comparisons, Masks, and Boolean Logic
+
+"""
+    bu bölümde boolean mask ı görücez, boolean masklar; numpy arraylarındaki değerleri
+    işleme ve manipule etmek için kullanılır. Ayıklama, modifye, sayma ya da numpy arrayındaki
+    değerleri belirli kriterlere göre manipule etmek için kullanılan yönteme Maskeleme denir. Mesela
+    arraydaki değerlerin içinden belirli bir değerin üstündeki tüm değerleri saydırmak istiyoruz ya da
+    kaldırmak istiyoruz, bu gibi durumlarda boolean masking sık sık kullanılan bir yöntem.
+    
+        Örnek; counting rainy days:
+            import pandas as pd
+            yagmur = pd.read_csv("samsun2017.csv")["oran"].values
+            inc = yagmur / 254.0
+            inc.shape # output = (150,) yani günlük yağan yağmurun inç cinsinden 150 adet veri var
+"""
+
+# operatörleri ufunclar ile karşılaştırma
+
+x = np.array([1,2,3,4,5])
+print(x < 3, "\n")
+print(x > 3, "\n")
+print(x == 3, "\n")
+print((2 * x) == (2 + x), "\n")
+
+# boolean arraylar ile işlemler
+
+x = np.random.RandomState(0)
+x = x.randint(10, size= (3, 5))
+countTrue = np.count_nonzero(x < 6) # x arrayında 6 dan küçük olanlar True olucak ve nonzero yani false
+print(countTrue, "\n")                    # olmayanların sayısı 6 dan küçüklerin sayısını vericek
+                                            # aynı işlemi np.sum(x_array < 6) ile de yapabiliriz.
+                                            #sum un avantajı, spesifik axisler üzerinde çalışabilirz
+print(x, "\n")
+print(np.sum(x < 6, axis = 1), "\n")  # Her satırdaki 6 dan küçüklerin sayısı
+
+#np.any(x < 6) eğer 6 dan küçük herhangi bir eleman varsa True döndürür.
+#np.all(x < 10) bütün elemanlar 10 dan küçükse true döndürür
+
+print(np.all(x < 6, axis = 1), "\n")
+print(np.sum((x < 6) | (x == 6)), "\n")
+print(np.sum(~(x < 6) | (x == 6)), "\n") # ~ NOT işareti
+
+
+# boolean arraylar ile masking
+
+print(x < 5, "\n") # bu şekilde bir sorgu ile boolean array elde edebiliriz.
+                #şimdi 5 ten küçük değerleri ayrı bir array olarak elde edersek
+                #o zaman masking yapmış olacağız.
+
+print(x[x < 5], "\n") #döndrdüğü tek boyutlu array, x < 5 sorgusundaki truelerin değerleri
+
+#örnek yapalım
+# array_adı[sorgu]
+
+boylar = np.array([199,157,185,182,175,177,174,189,122,182,168,163,181,155])
+
+boy_feet = boylar / 30.48
+
+uzunlar = (boy_feet >= 6)
+
+kısalar = (~uzunlar)
+
+print("Boyların ortalaması\n", np.mean(boylar))
+print("Boyların(f) ortalaması\n", np.mean(boy_feet))
+print("Uzunların ortalaması\n", np.mean(boy_feet[uzunlar]))#eğer np.mean(uzunlar) dersem truelerin ortalamasını
+print("Kısaların ortalaması\n", np.mean(boy_feet[kısalar]))#alır. Masking burda devreye giriyor
+
+
+# and / or VERSUS "&" / "|"
+
+a = np.array([1,0,0,0,1,1,1,0,1], dtype="bool")
+b = np.array([1,1,0,1,1,0,1,0,0], dtype="bool")
+print(a | b)
+#print(a or b) -> hata verecektir çünkü "and" ya da "or" tüm obje için tek bir boolean sonuç döndürürken
+                # "|" ya da "&" konu üzerine birden çok boolean döndürebilir, numpy arraylarında
+                # çoğunluklu "|" / "&" tercih edilir.
+                
+                
+#%% Fancy Indexing
+# fancy indexing; array içinde belirli index elemanları ararken o elemanları bir değişkene
+ # atayıp ardından o değişkeni de belirli shapelere sokarak belkide (2,3) size'lık bir arraydan
+ # çekmek istediğiniz elemanları (1, 4) lük bir şekilde size sunması gibi.. örnek;
+ 
+x = np.random.RandomState(42) #seed=42, random sayı üretirken hep aynı kalıpta üreticek
+x = x.randint(100, size = 10)
+
+print(x, "\n")
+
+fancy_index = [2,5,6,8,9]
+fancy_index2 = np.array([[2,5,6],
+                         [1,7,8]])  #tek boyutlu bir diziden indexing yaparken boyut değişikliği yapacaksak
+                                    # indexing için yeni bir array oluşturmalıyız
+fancy1 = x[fancy_index]
+fancy2 = x[fancy_index2]
+
+print("x[fancy_index = [2,5,6,8,9]]","\n", fancy1, "\n")
+print("x[fancy_index2 = np.array([[2,5,6],[1,7,8]])","\n", fancy2, "\n")
+
+                
+                
 
 
 
