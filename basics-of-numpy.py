@@ -579,16 +579,186 @@ fancy_index = [2,5,6,8,9]
 fancy_index2 = np.array([[2,5,6],
                          [1,7,8]])  #tek boyutlu bir diziden indexing yaparken boyut değişikliği yapacaksak
                                     # indexing için yeni bir array oluşturmalıyız
-fancy1 = x[fancy_index]
-fancy2 = x[fancy_index2]
+                                    
+fancy1 = x[fancy_index] #x'in 2, 5, 6, 8, 9 inci indexleri getir
+fancy2 = x[fancy_index2] #x'in 1,2,5,6,7,8 inci indexlerini belirlenen arraya göre getir
 
-print("x[fancy_index = [2,5,6,8,9]]","\n", fancy1, "\n")
-print("x[fancy_index2 = np.array([[2,5,6],[1,7,8]])","\n", fancy2, "\n")
-
-                
-                
+print("x[fancy_index] = [2,5,6,8,9]","\n", fancy1, "\n")
+print("x[fancy_index2] = np.array([[2,5,6],[1,7,8]])","\n", fancy2, "\n")
 
 
+# fancy indexing iki boyutlu arraylarda da işe yarar
+
+"""
+iki boyutlu arrayı ayarladıktan sonra fancy indexing için 2 tane yeni array ayarlarız yeni arrayımızın
+ elemanları, indexleri temsil edicek.. x arrayı 2 satırlı olduğu için satır isimli array 0 ile 1
+  elemanlarını alabilir.. x arrayımız 5 elemanlı olduğu için ise 0 ile 4 arasında bir değer alabilir.
+   şuna eşit olur; x[0][2] -> 0. indexin(satır) 2. indexli(sütun) elemanı
+   aynı zamanda satır = np.array([0])
+                sütun = np.array([2])
+                fancy_x = x[satır, sütun] -> 0. indexin 2. indexli elemanı
+"""
+x = np.arange(10).reshape((2,5))
+satır = np.array([0,1,0,1])
+sütun = np.array([4,1,3,0])
+x_fancy = x[satır, sütun]
+print(x, "\n")
+print(x_fancy, "\n")
+
+"""
+    elde edeceğimiz yeni fancy indexli arrayımızı çok boyutlu olmasını istiyorsak;
+    x[satır[:, np.newaxis], sütun] şekilnde yapabiliriz... bu şekilde;
+    satır = [[0],
+             [1],
+             [0],
+             [1]] şekilde olacaktır. ve sütun = [4,1,3,0] olduğu için elde edeceğimiz yeni array
+    0. satırın 4,1,3 ve 0 indexli elemanlarını ilk satıra getirir ardından
+    1. satırın 4,1,3 ve 0 indexli elemanlarını ardından
+    0 ardından yine
+    1. satırın 4,1,3 ve 0 indexli elemanlarını getirerek yeni bir (4,4) lük array elde eder.
+"""
+
+x_fancy2 = x[satır[:, np.newaxis], sütun]
+print(x_fancy2, "\n")
+
+#Combined Indexing
+
+x = np.arange(12).reshape((3,4))
+combined_x = x[1, [0,3]] #1 indexli satırın 0 ve 3 indexli sütunları
+print(x, "\n")
+print(combined_x, "\n")
+
+#ayrıca bu yöntem ile slicing i birleştirerek boyut kazandırabiliriz
+
+combined_x2 = x[1:, [2,3]] #1. index ve sonraki satırlar için 2 ve 3 indexli elemanlar
+print(combined_x2, "\n") # x için düşünürsek 1 ve 2. satırların 3 ve 4. sütunları yani 2x2 lik bir array
+
+#fancy indexing ile masking
+# bunu yaparken True ye denk gelen elemanlar dönerken false denk gelen elemanlar dönmeyecek
+
+maske = np.array([1,0,0,1], dtype="bool") #true,true,true,true
+maske2 = np.array([False, False, False, False])
+masked_x = x[satır[:, np.newaxis], maske] #satır = [0,1,0,1], yani 0 ve 1. satırlardan true,false,false,true
+masked_x2 = x[satır[:, np.newaxis], maske2] # 0 ve 1. satırlardan 4 tane false, çünkü x arrayının sizesi 4
+print(masked_x, "\n")
+print(masked_x2, "\n")
+
+"""
+    örnek : rastgele noktalar seçme;
+        fancy indexing'in en sık kullanıldığı yerlerden birisi matrixler içindeki belirli satırlardan
+        alt kümeler oluşturma.
+"""
+
+#Fancy indexing ile değerleri modifiye etme
+
+x = np.arange(10)
+i = np.array([4,3,7,0])
+x[i] = 100      # 4,3,7 ve 0. indexleri 100 yap.
+print(x, "\n")
+x[i + 1] -= 25 #eğer son indexli elemanı çağırıyor olsaydık hata alırdık çünkü listeden çıkmış olurdu
+print(x, "\n")
+x[[0, 0]] = [4, 6]
+print(x, "\n") # x[0] = 6, neden 4 değil ? çünkü ilk 4 yapıp ardından 6 yaptı.
+
+# ancak:
+i = np.array([0,0,1,1,1,2,2]) #indexlerken aynı indexleri göstersek ve...
+x[i] += 1 # dersek, 0 indexi iki defa mi artar yoksa bir defa mi?
+print(x, "\n") # bir defa arttı çünkü x[i] += 1 ile x[i] + 1 aynı şey, birden çok değil bir defa çalışır.
+# ama eğer at() ufunc unu kullanırsak multiple time yani birden fazla kez çalıştırabiliriz
+np.add.at(x, i, 1) #(kaynak, indexler, artış sayısı)
+print(x, "\n") # görüldüğü gibi 0. index 2 defa 1. index 3 defa artıyor.
+
+
+# örnek : Binning data (küçükten büyüğe doğru veriyi sıralama, gruplama)
+
+x = np.random.seed(42)
+x = np.random.randn(100) #100 elemanlı seedi 42 olan bir random
+
+# histogram'ı(sütun grafiği) elle işleme
+bins = np.linspace(-5, 5, 20) # -5 ten 5 e doğru 20 eleman ile
+counts = np.zeros_like(bins) #bins arrayı kadar 0 lardan oluşan bir array
+
+# her bir x için uygun kutu(bin) bul
+i = np.searchsorted(bins, x)
+
+# tüm kutulara(bins) 1 ekle
+np.add.at(counts, i, 1)
+
+#sonucu görselleştir
+# import matplotlib.pyplot as plt
+plt.plot(bins, counts, linestyle="steps")
+
+#%% Sorting Arrays (Sıralama)
+
+#her ne kadar python un build-in fonksiyonlarında sort methodu varsa np.sort ya da np.argsort
+# daha işlevsel ve hızlı, quicksort algoritması kullanılıyor, aynı zamanda mergesort ve heapsort
+#  da kullanılabilir.
+
+x = np.array([5,1,2,6,4,8])
+print(x, "\n")
+print("np.sort     : ", np.sort(x), "\n")
+# array_adı.sort() şeklinde de kullanılabilir
+x.sort() # array-in-place yöntemi.. artık arrayın orjinal hali sıralı
+print("x.sort()    : ", x, "\n")
+
+#np.argsort() ise array ın indexli sıralanmasını yapar mesela [2,0,1,3] arrayında
+# en küçük eleman 1. index ardından 2. index ardından 0 ve 3. index yani sonuç = [1,2,0,3]
+
+x = np.array([5,1,2,6,4,8])
+print(x, "\n")
+print("np.argsort() : ", np.argsort(x), "\n") # bu yöntem fancy indexing ile de kullanılabilir mesela..
+
+y = np.array([1,4,-5,6])
+print(y, "\n")
+i = np.argsort(y)
+print("i = np.argsort(y) : ", i, "\n")
+print("y[i]     : ", y[i], "\n")
+
+# satırlar ve sütunlar ile beraber sıralama
+
+rand = np.random.RandomState(45)
+x = rand.randint(0, 10, (4, 6))
+print(x, "\n")
+col = np.sort(x, axis = 0) # sütunları sırala
+print("sort 0. axis:\n", col, "\n")
+row = np.sort(x, axis = 1)
+print("sort 1. axis:\n", row, "\n")
+
+# Kısmi sıralama
+#  Bazen tüm arrayı sıralamak yerine belirli bölümleri sıralayabiliriz... en küçük k elemanı arıyor olabiliriz.
+#  numpy bu konuda bize np.partition fonksiyonunu sunuyor. partition bir array ve bir k sayısı alır.
+#  return edilen değer ise yeni bir arraydır ve en küçük K sayısı arrayın en solundadır, geri kalanlar ise
+#  rastgele bir şekilde sağa doğru dizilmiştir.
+
+x = np.array([51,24,-3,4,1,78,0,10])
+print(x, "\n")
+print("partition(x,3):\n",np.partition(x, 3),"\n") #x arrayının en küçük 3 elemanını sola getir. Sonuç sıralı çıkmayabilir
+print("partition(x,5):\n", np.partition(x, 5),"\n") # output = [1 4 -3 0 10 24 51 78] ilk 5 eleman arrayın en küçük 5 elemanı
+
+
+# multi-dim versiyonu da yapılabilir.
+y = np.random.randint(0, 25, (3,5))
+print(y, "\n")
+print("partition(y, 2, axis=1):\n",np.partition(y, 2, axis=1), "\n") #y arrayının en küçük 2 elemanını sola
+                                                                        #döşediği yeni bir array...
+
+# argsort olduğu gibi argpartition da var, orjinal array üzerindeki index değerlerini, yeni arrayda döndürür
+print("argpartition(y, 2, axis=1):\n",np.argpartition(y, 2, axis=1), "\n")
+
+
+"""
+ÖRNEK; k-Nearest Neighbors
+
+10x2 lik bir random array ,arraydaki elemanların nasıl göründüğünü grafik
+üzerinde noktalarla gösterelim.
+x = rand.rand(10, 2) 
+%matplotlib inline
+import matplotlib.pyplot as plt
+import seaborn; seaborn.set()
+plt.scatter(x[:, 0], x[:, 1], s=100);
+
+yukarıdaki kodu ipython console da çalıştır
+"""
 
 
 
