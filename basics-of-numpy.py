@@ -758,7 +758,85 @@ import seaborn; seaborn.set()
 plt.scatter(x[:, 0], x[:, 1], s=100);
 
 yukarıdaki kodu ipython console da çalıştır
+
+Kitaptan devam kısımlarını tam anlamadım
 """
+
+
+#%% Numpy'nin yapılandırılmış dizileri (Structures Arrays)
+
+"""
+    normalde isimler, yaşlar ve kilolar şeklinde 3 ayrı liste oluştursak, birbirinden bağımsız olur ancak
+    numpy nin dtype özelliğinden faydalanarak 3 ayrı listeyi sınıflandırabilir, içinde barındıracağı değerlerin
+    tipini ayarlyabiliriz.
+    U10 -> en fazla 10 karakter alan Unicode string
+    i4 ->  4-byte integer(32 bit)
+    f8 ->  8-byte float (64 bit)
+"""
+
+isim = ["batuhan", "yakup", "ali"]
+yas = [23, 25, 22]
+kilo = [71.1, 75.5, 95.7]
+
+# şimdi özellikle veri tiplerine göre "yapılandırılmış dizi" yani structured array oluşturucaz.
+veri = np.zeros(3, dtype = {"names" : ("isim", "yas", "kilo"),
+                            "formats" : ("U10", "i4", "f8")})
+    
+print(veri.dtype) # output -> [('isim', '<U10'), ('yas', '<i4'), ('kilo', '<f8')]
+                    # şimdi gerekli verileri tutacağımız boş bir container arrayımız var.
+                    
+# şimdi de birbirinden bağımsız 3 listemizi konteynırımıza yerleştirelim
+                    
+# array_adı["dtype'de verdiğimiz isim"] = <atanmasını istediğimiz bağımsız liste>
+veri["isim"] = isim
+veri["yas"] = yas
+veri["kilo"] = kilo
+print(veri) # output -> [('batuhan', 23, 71.1) ('yakup', 25, 75.5) ('ali', 22, 95.7)]
+print(veri["isim"]) # tüm isimleri çek      -> ['batuhan' 'yakup' 'ali']
+print(veri["yas"]) # tüm yaşları çek        -> [23 25 22]
+print(veri[0]) # veri nin ilk satırını çek  -> ('batuhan', 23, 71.1)
+print(veri[2]["kilo"]) # veri nin 2. indexli satırının kilo sütununu çek -> 95.7
+
+#boolean masking ile daha spesipik verileri çekebiliriz
+x = veri[veri["yas"] < 25]["isim"] # veri nin yaş sütunundan 25 ten küçüklerin, isimlerini çek
+print(x) # output -> ['batuhan' 'ali']
+
+# değişken olarak tanımlayarak da dtype belirleyebiliriz.
+# daha gelişmiş ve karmaşık, her bir elementin, değerlerden oluşan bir array ya da matrixi tuttuğu
+#  bir dtype oluşturabiliriz. bu data type ini <mat> componentiyle oluşturucaz (3x3 lük float matrix)
+
+veri_tipi = np.dtype([("id", "i8"), ("mat", "f8", (3, 3))])
+X = np.zeros(1, dtype = veri_tipi)
+print(X) # X[0]
+print(X["mat"]) # X["mat"][0]
+
+# x arrayının içindeki her bir eleman 3x3 lük matrixten ve id den oluştu.
+
+#%% RecordArrays
+
+isim = ["batuhan", "yakup", "ali"]
+yas = [23, 25, 22]
+kilo = [71.1, 75.5, 95.7]
+
+vt = np.dtype({"names" : ("isim", "yas", "kilo"), "formats" : ("U10", "i4", "f8")})
+veri = np.zeros(3, dtype = vt)
+
+veri["isim"] = isim
+veri["yas"] = yas
+veri["kilo"] = kilo
+
+print(veri["yas"], veri["yas"].dtype)
+
+# veri arrayımıza bir defa record array olarak bakarsak(view) ve değişkene atarsak
+#  daha çabuk ve kolay bir biçimde verimizin özelliklerine, içindekilere bakabiliriz
+veri_rec = veri.view(np.recarray)
+print(veri_rec.yas)
+print(veri_rec)
+print(veri_rec.isim)
+
+
+
+
 
 
 
